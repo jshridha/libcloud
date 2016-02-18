@@ -455,6 +455,37 @@ class BackblazeB2StorageDriver(StorageDriver):
         upload_url = result['uploadUrl']
         return upload_url
 
+    def ex_get_large_upload_data(self, container_id, object_name, extra=None):
+        """
+        Retrieve information used for uploading files (upload url, auth token,
+        etc).
+
+        :rype: ``dict``
+        """
+        params = {}
+        params['bucketId'] = container_id
+        params['fileName'] = object_name
+
+        extra = extra or {}
+        content_type = extra.get('content_type', 'b2/x-auto')
+        params['contentType'] = content_type
+        response = self.connection.request(action='b2_start_large_file',
+                                           method='GET',
+                                           params=params)
+        return response
+        pass
+
+    def ex_get_large_upload_url(self, container_id, object_name, extra):
+        """
+        Retrieve URL used for large file uploads.
+
+        :rtype: ``str``
+        """
+        response = self.connection.request(action='b2_start_large_file',
+                                           method='GET')
+
+
+
     def _to_containers(self, data):
         result = []
         for item in data['buckets']:
