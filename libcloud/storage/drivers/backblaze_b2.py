@@ -30,6 +30,7 @@ from libcloud.utils.py3 import httplib
 from libcloud.utils.py3 import urlparse
 from libcloud.utils.files import read_in_chunks
 from libcloud.utils.files import exhaust_iterator
+from libcloud.utils.escape import sanitize_object_name
 
 from libcloud.common.base import ConnectionUserAndKey
 from libcloud.common.base import JsonResponse
@@ -316,7 +317,7 @@ class BackblazeB2StorageDriver(StorageDriver):
                                 success_status_code=httplib.OK)
 
     def upload_object(self, file_path, container, object_name, extra=None,
-                      verify_hash=True, headers=None, iterator=None):
+                      verify_hash=True, headers=None):
         """
         Upload an object.
 
@@ -325,13 +326,11 @@ class BackblazeB2StorageDriver(StorageDriver):
         # Note: We don't use any of the base driver functions since Backblaze
         # API requires you to provide SHA1 has upfront and the base methods
         # don't support that
-        object_name = object_name.replace('\\', '/')
-        if iterator is None:
-            with open(file_path, 'rb') as fp:
-                iterator = iter(fp)
-                iterator = read_in_chunks(iterator=iterator)
-                data = exhaust_iterator(iterator=iterator)
-        else:
+
+        object_name = sanitize_object_name(object_name)
+
+        with open(file_path, 'rb') as fp:
+            iterator = iter(fp)
             iterator = read_in_chunks(iterator=iterator)
             data = exhaust_iterator(iterator=iterator)
 
@@ -383,8 +382,7 @@ class BackblazeB2StorageDriver(StorageDriver):
 
         obj = self.upload_object(file_path=None, container=container,
                                  object_name=object_name, extra=None,
-                                 verify_hash=True, headers=headers,
-                                 iterator=iterator)
+                                 verify_hash=True, headers=headers)
         return obj
 
     def delete_object(self, obj):
